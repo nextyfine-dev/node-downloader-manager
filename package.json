@@ -1,0 +1,62 @@
+{
+  "name": "node-downloader-manager",
+  "module": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "bun --watch src/example.ts"
+  },
+  "devDependencies": {
+    "@types/node": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "version": "1.0.0",
+  "description": "node-downloader-manager is a simple yet powerful package manager-like download manager built with NodeJs. It allows you to download files sequentially or with a queue-based approach, handling retries and concurrency limits efficiently.",
+  "main": "index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nextyfine-dev/node-downloader-manager.git"
+  },
+  "keywords": [
+    "download manager",
+    "node-downloader-manager",
+    "node-download-manager",
+    "download helper",
+    "download-manager",
+    "file-downloader",
+    "download-queue",
+    "simple-download",
+    "concurrent-downloads",
+    "retry-downloads",
+    "queue-based-downloader",
+    "task-priority",
+    "file-management",
+    "download-manager-node",
+    "node-file-downloader",
+    "async-downloads",
+    "download-retry",
+    "nodejs-download",
+    "typescript-download-manager",
+    "node-download-utility",
+    "task-scheduler",
+    "batch-downloader",
+    "node"
+  ],
+  "author": "nextyfine-dev, sdeepx",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nextyfine-dev/node-downloader-manager/issues"
+  },
+  "homepage": "https://github.com/nextyfine-dev/node-downloader-manager#readme"
+}
