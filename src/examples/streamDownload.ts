@@ -1,4 +1,4 @@
-import DownloadManager from "../modules/DownloadManager";
+import DownloadManager from "../modules/DownloadManager.js";
 
 const url =
   "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64";

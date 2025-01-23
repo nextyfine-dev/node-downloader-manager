@@ -1,4 +1,4 @@
-import DownloadManager from "../modules/DownloadManager";
+import DownloadManager from "../modules/DownloadManager.js";
 
 const urls = [
   "https://i.imgur.com/StLyH09.jpeg",
