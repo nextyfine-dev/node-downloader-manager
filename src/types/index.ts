@@ -12,8 +12,16 @@ export type DownloadManagerOptions = {
   consoleLog?: boolean;
   downloadFolder?: string;
   getFileName?: (url: string) => string;
-  onBeforeDownload?: (url: string, fileName: string) => Promise<void>;
-  onAfterDownload?: (url: string, fileName: string) => Promise<void>;
+  onBeforeDownload?: (
+    url: string,
+    file: string,
+    fileName: string
+  ) => Promise<void>;
+  onAfterDownload?: (
+    url: string,
+    file: string,
+    fileName: string
+  ) => Promise<void>;
   overWriteFile?: boolean;
   requestOptions?: RequestInit;
   stream?: boolean;

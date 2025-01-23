@@ -24,7 +24,7 @@ class Queue {
     message: string | number | Task,
     type: "info" | "error" | "warn" = "info"
   ) {
-    if (this.log || type === "error") {
+    if (this.log) {
       console[type](
         `[${process.pid}] : [${new Date().toLocaleString()}] : `,
         message

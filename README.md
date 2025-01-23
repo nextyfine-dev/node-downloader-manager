@@ -83,7 +83,8 @@ https://github.com/nextyfine-dev/node-downloader-manager/tree/master/src/example
 #### Queue Download
 
 ```typescript
-import DownloadManager from "node-download-manager";
+import { DownloadManager } from "node-download-manager";
+// const { DownloadManager } = require("node-download-manager"); for cjs
 
 const urls = [
   "https://i.imgur.com/StLyH09.jpeg",
@@ -106,7 +107,7 @@ downloadManager.download(urls);
 #### Stream Download
 
 ```typescript
-import DownloadManager from "node-download-manager";
+import { DownloadManager } from "node-download-manager";
 
 const url =
   "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64";
@@ -128,7 +129,7 @@ downloadManager.download(url);
 #### Simple Download
 
 ```typescript
-import DownloadManager from "node-download-manager";
+import { DownloadManager } from "node-download-manager";
 
 const urls = [
   "https://i.imgur.com/StLyH09.jpeg",
@@ -147,7 +148,7 @@ downloadManager.download(urls);
 #### Pause, Resume, and Cancel Download
 
 ```typescript
-import DownloadManager from "node-download-manager";
+import { DownloadManager } from "node-download-manager";
 
 const url =
   "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64";
@@ -181,7 +182,7 @@ downloadManager.download(url);
 #### Thread Download (Beta)
 
 ```typescript
-import DownloadManager from "node-download-manager";
+import { DownloadManager } from "node-download-manager";
 
 const urls = [
   "https://i.imgur.com/StLyH09.jpeg",

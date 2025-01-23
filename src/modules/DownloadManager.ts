@@ -16,10 +16,12 @@ class DownloadManager extends EventEmitter {
   private readonly getFileName?: (url: string) => string;
   private readonly onAfterDownload?: (
     url: string,
+    file: string,
     fileName: string
   ) => Promise<void>;
   private readonly onBeforeDownload?: (
     url: string,
+    file: string,
     fileName: string
   ) => Promise<void>;
   private readonly log: boolean;
@@ -88,7 +90,7 @@ class DownloadManager extends EventEmitter {
   }
 
   private logger(message: string, type: "info" | "error" | "warn" = "info") {
-    if (this.log || type === "error") {
+    if (this.log) {
       console[type](
         `[${process.pid}] : [${new Date().toLocaleString()}] : `,
         message
@@ -330,7 +332,7 @@ class DownloadManager extends EventEmitter {
 
       if (this.onBeforeDownload) {
         this.logger("Running before downloaded function");
-        await this.onBeforeDownload(url, file);
+        await this.onBeforeDownload(url, file, fileName);
       }
 
       if (!fs.existsSync(file) || this.overWriteFile) {
@@ -405,7 +407,7 @@ class DownloadManager extends EventEmitter {
 
       if (this.onAfterDownload) {
         this.logger("Running after downloaded function");
-        await this.onAfterDownload(url, fileName);
+        await this.onAfterDownload(url, file, fileName);
       }
       return true;
     } catch (error) {
