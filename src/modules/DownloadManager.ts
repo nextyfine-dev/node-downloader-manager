@@ -3,11 +3,14 @@ import path from "node:path";
 import { EventEmitter } from "node:events";
 import type { DownloadManagerOptions, EmitDataType } from "../types";
 import Queue from "./Queue.js";
+import Thread from "./Thread.js";
 import { emitEvents, EmitEventType, emitMessages } from "../config/const";
 
 class DownloadManager extends EventEmitter {
+  private readonly options: DownloadManagerOptions;
   private readonly downloadQueue!: Queue; // Queue to handle multiple downloads
-  private readonly method: "simple" | "queue"; // Download method
+  private readonly downloadThread!: Thread; // Thread to handle multiple downloads
+  private readonly method: "simple" | "queue" | "thread"; // Download method
   private readonly concurrencyLimit: number;
   private readonly downloadFolder: string;
   private readonly getFileName?: (url: string) => string;
@@ -54,8 +57,10 @@ class DownloadManager extends EventEmitter {
       stream = false,
       backOff = false,
       timeout = 30000,
+      maxWorkers = 5,
     } = options;
 
+    this.options = options;
     this.method = method;
     this.concurrencyLimit = concurrencyLimit;
     this.log = consoleLog;
@@ -69,13 +74,16 @@ class DownloadManager extends EventEmitter {
     this.timeout = timeout;
 
     // Initialize queue if the method is "queue"
-    if (this.method === "queue") {
+    if (method === "queue") {
       this.downloadQueue = new Queue(
         concurrencyLimit,
         retries,
         consoleLog,
         backOff
       );
+    }
+    if (method === "thread") {
+      this.downloadThread = new Thread(maxWorkers, consoleLog);
     }
   }
 
@@ -288,7 +296,7 @@ class DownloadManager extends EventEmitter {
       this.emit(emitEvents.complete, {
         fileName,
         url,
-        message: emitMessages.finished,
+        message: emitMessages.complete,
       });
 
       this.emit(emitEvents.finished, {
@@ -343,18 +351,31 @@ class DownloadManager extends EventEmitter {
           signal: controller.signal,
         });
         if (res.status !== 200 && res.status !== 206 && res.status !== 304) {
-          this.logger(
-            `Could not download the file from ${url}, status ${res.status}`,
-            "error"
-          );
-          throw new Error(
-            `Download failed from ${url} with status ${res.status}`
-          );
+          const errMSg = `Download failed from ${url} with status ${res.status}`;
+          this.emit(emitEvents.error, {
+            message: emitMessages.error,
+            url,
+            file,
+            fileName,
+            error: { message: errMSg },
+          });
+          throw new Error(errMSg);
         }
         await fs.promises.mkdir(this.downloadFolder, { recursive: true });
 
         if (!this.stream) {
           await fs.promises.writeFile(file, res.body!, { flag: "w" });
+          this.emit(emitEvents.complete, {
+            fileName,
+            url,
+            message: emitMessages.complete,
+          });
+
+          this.emit(emitEvents.finished, {
+            fileName,
+            url,
+            message: emitMessages.finished,
+          });
           this.logger(
             `File ${fileName} downloaded successfully. Downloaded from ${url}`
           );
@@ -414,6 +435,12 @@ class DownloadManager extends EventEmitter {
     }
   }
 
+  private invalidUrlEmit(url: string) {
+    const msg = `${url} is not valid`;
+    this.logger(msg, "error");
+    this.emit(emitEvents.error, { message: msg, url });
+  }
+
   // Method to add single download task to the queue
   enqueueDownloadTask(
     url: string,
@@ -431,8 +458,26 @@ class DownloadManager extends EventEmitter {
       };
       this.downloadQueue.enqueue(downloadableFile);
     } else {
-      this.logger(`${url} is not valid`, "error");
+      this.invalidUrlEmit(url);
     }
+  }
+
+  addThreadDownloadTask(url: string, fileName: string) {
+    if (this.isValidUrl(url)) {
+      const task = {
+        id: `${Date.now()}-${fileName}`, // Unique task ID
+        url,
+        fileName,
+        options: this.options,
+      };
+      this.downloadThread.runThreadTask(task);
+    } else {
+      this.invalidUrlEmit(url);
+    }
+  }
+
+  public terminateThreads() {
+    this.downloadThread.terminateAll();
   }
 
   private createFileName(url: string) {
@@ -442,39 +487,64 @@ class DownloadManager extends EventEmitter {
     return fileName;
   }
 
+  async simpleDownload(urls: string | string[], fileName?: string) {
+    if (typeof urls === "string") {
+      const file = fileName ?? this.createFileName(urls);
+      await this.downloadFile(urls, file);
+    } else {
+      const downloadChunks = (chunk: string[]) =>
+        Promise.all(
+          chunk.map((url) => {
+            const fileName = this.createFileName(url);
+            return this.downloadFile(url, fileName);
+          })
+        );
+
+      for (let i = 0; i < urls.length; i += this.concurrencyLimit) {
+        await downloadChunks(urls.slice(i, i + this.concurrencyLimit));
+      }
+    }
+  }
+
+  async queueDownload(urls: string | string[]) {
+    if (typeof urls === "string") {
+      const fileName = this.createFileName(urls);
+      this.enqueueDownloadTask(urls, fileName);
+    } else {
+      for await (const url of urls) {
+        const fileName = this.createFileName(url);
+        this.enqueueDownloadTask(url, fileName);
+      }
+    }
+  }
+
+  async threadDownload(urls: string | string[]) {
+    if (typeof urls === "string") {
+      const fileName = this.createFileName(urls);
+      this.addThreadDownloadTask(urls, fileName);
+    } else {
+      for await (const url of urls) {
+        const fileName = this.createFileName(url);
+        this.addThreadDownloadTask(url, fileName);
+      }
+    }
+  }
+
   // Main method to handle multiple URL downloads
-  async download(urls: string | string[]) {
+  async download(urls: string | string[], fileName?: string) {
     // If the method is "simple", download the files sequentially
     if (this.method === "simple") {
-      if (typeof urls === "string") {
-        const fileName = this.createFileName(urls);
-        await this.downloadFile(urls, fileName);
-      } else {
-        const downloadChunks = (chunk: string[]) =>
-          Promise.all(
-            chunk.map((url) => {
-              const fileName = this.createFileName(url);
-              return this.downloadFile(url, fileName);
-            })
-          );
-
-        for (let i = 0; i < urls.length; i += this.concurrencyLimit) {
-          await downloadChunks(urls.slice(i, i + this.concurrencyLimit));
-        }
-      }
+      await this.simpleDownload(urls, fileName);
     }
 
     // If the method is "queue", enqueue the download tasks
     else if (this.method === "queue") {
-      if (typeof urls === "string") {
-        const fileName = this.createFileName(urls);
-        this.enqueueDownloadTask(urls, fileName);
-      } else {
-        for await (const url of urls) {
-          const fileName = this.createFileName(url);
-          this.enqueueDownloadTask(url, fileName);
-        }
-      }
+      await this.queueDownload(urls);
+    }
+
+    // If the method is "thread", add the download tasks to thread
+    else if (this.method === "thread") {
+      await this.threadDownload(urls);
     }
   }
 }

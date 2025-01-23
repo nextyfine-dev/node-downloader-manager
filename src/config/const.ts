@@ -25,6 +25,7 @@ export const emitMessages = {
   resumedAll: "All downloads resumed",
   exists: "File already exists",
   progress: "Download is in progress",
+  complete: "Download completed successfully",
 };
 
 export type EmitEventType = keyof typeof emitEvents;

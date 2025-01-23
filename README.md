@@ -22,6 +22,7 @@
       - [Stream Download](#stream-download)
       - [Simple Download](#simple-download)
       - [Pause, Resume, and Cancel Download](#pause-resume-and-cancel-download)
+      - [Thread Download (Beta)](#thread-download-beta)
   - [📖 API Reference](#-api-reference)
     - [DownloadManager Options](#downloadmanager-options)
     - [Methods](#methods)
@@ -175,6 +176,28 @@ setTimeout(() => {
 }, 10000);
 
 downloadManager.download(url);
+```
+
+#### Thread Download (Beta)
+
+```typescript
+import DownloadManager from "node-download-manager";
+
+const urls = [
+  "https://i.imgur.com/StLyH09.jpeg",
+  "https://i.imgur.com/vFopwVJ.png",
+  "https://i.imgur.com/NaCQQ8c.jpeg",
+  "https://i.imgur.com/GXeeLNx.jpeg",
+  "https://i.imgur.com/ElhcT9n.jpeg",
+];
+
+const downloadManager = new DownloadManager({
+  consoleLog: true,
+  method: "thread",
+  maxWorkers: 5,
+});
+
+downloadManager.download(urls);
 ```
 
 ## 📖 API Reference

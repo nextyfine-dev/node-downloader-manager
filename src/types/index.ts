@@ -3,11 +3,10 @@ export interface Task {
   priority: number; // Higher priority = processed earlier
   action: () => Promise<boolean>; // Task function
   retries: number; // Number of retries attempted
-  consoleLog?: boolean;
 }
 
 export type DownloadManagerOptions = {
-  method?: "simple" | "queue"; // Download method
+  method?: "simple" | "queue" | "thread"; // Download method
   concurrencyLimit?: number; // Number of concurrent downloads (for "queue" method)
   retries?: number; // Max retries (for "queue" method)
   consoleLog?: boolean;
@@ -20,6 +19,7 @@ export type DownloadManagerOptions = {
   stream?: boolean;
   backOff?: boolean;
   timeout?: number;
+  maxWorkers?: number;
 };
 
 export type EmitDataType = {
@@ -32,4 +32,11 @@ export type EmitDataType = {
   totalSize?: number;
   downloaded?: number;
   speed?: string;
+};
+
+export type WorkerTask = {
+  id: string;
+  fileName: string;
+  url: string;
+  options: DownloadManagerOptions;
 };
