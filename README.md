@@ -1,177 +1,222 @@
 # 🌟 node-downloader-manager
 
+# 📥 DownloadManager
+
 `node-downloader-manager` is a lightweight and efficient file download manager for Node.js applications. It allows you to download files either sequentially or using a queue-based approach, providing features like retry mechanisms, concurrency control, and custom file naming.
 
 ## 📚 Table of Contents
 
 - [🌟 node-downloader-manager](#-node-downloader-manager)
+- [📥 DownloadManager](#-downloadmanager)
   - [📚 Table of Contents](#-table-of-contents)
   - [✨ Features](#-features)
   - [📦 Installation](#-installation)
-    - [Using npm:](#using-npm)
-    - [Using yarn:](#using-yarn)
-    - [Using bun:](#using-bun)
+    - [npm](#npm)
+    - [yarn](#yarn)
+    - [pnpm](#pnpm)
+    - [bun](#bun)
   - [🚀 Usage](#-usage)
-    - [Queue Download Example](#queue-download-example)
-    - [Simple Download Example](#simple-download-example)
-    - [Custom File Name Logic Example](#custom-file-name-logic-example)
-  - [🛠️ API Documentation](#️-api-documentation)
-    - [DownloadManager Class](#downloadmanager-class)
-      - [Constructor Options](#constructor-options)
-      - [Methods](#methods)
-    - [Queue Class](#queue-class)
-      - [Constructor Options](#constructor-options-1)
-      - [Methods](#methods-1)
+    - [Examples](#examples)
+      - [Queue Download](#queue-download)
+      - [Stream Download](#stream-download)
+      - [Simple Download](#simple-download)
+      - [Pause, Resume, and Cancel Download](#pause-resume-and-cancel-download)
+  - [📖 API Reference](#-api-reference)
+    - [DownloadManager Options](#downloadmanager-options)
+    - [Methods](#methods)
+    - [Events](#events)
+  - [🤔 Why Use DownloadManager?](#-why-use-downloadmanager)
+  - [🤝 Contributing](#-contributing)
   - [📝 License](#-license)
-
----
 
 ## ✨ Features
 
-- **Queue-based downloads**: Manage multiple file downloads with concurrency control.
-- **Simple sequential downloads**: Download files one by one without queuing.
-- **Retry mechanism**: Automatically retry failed downloads.
-- **Custom file naming**: Define your own logic for naming downloaded files.
-- **Logging**: Monitor download progress and errors with optional logging.
-- **File overwrite control**: Specify whether to overwrite existing files or skip them.
-
----
+- Supports both simple and queue-based download methods.
+- Handles multiple concurrent downloads with customizable concurrency limits.
+- Supports pausing, resuming, and canceling downloads.
+- Provides detailed progress and error reporting.
+- Allows custom file naming and pre/post-download hooks.
+- Supports streaming downloads for large files.
 
 ## 📦 Installation
 
-You can install `node-downloader-manager` using npm, yarn, or bun:
+You can install `node-download-manager` using your favorite package manager:
 
-### Using npm:
-
-```bash
-npm install node-downloader-manager
-```
-
-### Using yarn:
+### npm
 
 ```bash
-yarn add node-downloader-manager
+npm install node-download-manager
 ```
 
-### Using bun:
+### yarn
 
 ```bash
-bun add node-downloader-manager
+yarn add node-download-manager
 ```
 
----
+### pnpm
+
+```bash
+pnpm add node-download-manager
+```
+
+### bun
+
+```bash
+bun add node-download-manager
+```
 
 ## 🚀 Usage
 
-Here are some examples of how to use `node-downloader-manager` in your project.
+Here's how you can use `node-download-manager` in your project:
 
-### Queue Download Example
+### Examples
 
-The **queue method** allows you to manage multiple file downloads with concurrency control and retry mechanisms.
+#### Queue Download
 
-```ts
-import DownloadManager from "node-downloader-manager";
+```typescript
+import DownloadManager from "node-download-manager";
 
 const urls = [
-  "https://example.com/file1.jpeg",
-  "https://example.com/file2.jpeg",
-  "https://example.com/file3.jpeg",
+  "https://i.imgur.com/StLyH09.jpeg",
+  "https://i.imgur.com/vFopwVJ.png",
+  "https://i.imgur.com/NaCQQ8c.jpeg",
+  "https://i.imgur.com/GXeeLNx.jpeg",
+  "https://i.imgur.com/ElhcT9n.jpeg",
+  "https://i.imgur.com/sNNWmtU.png",
+  "https://i.imgur.com/Upa7Em5.jpeg",
+  "https://i.imgur.com/CTHsEaK.png",
 ];
 
-const downloadManager = new DownloadManager({
-  consoleLog: true, // Enable logging
-  method: "queue", // Use queue-based download
-});
+// Initialize the DownloadManager with console logging enabled
+const downloadManager = new DownloadManager({ consoleLog: true }); // By default method is 'queue'
 
-await downloadManager.download(urls);
+// Start the download
+downloadManager.download(urls);
 ```
 
-### Simple Download Example
+#### Stream Download
 
-The **simple method** downloads files sequentially, without managing a queue.
+```typescript
+import DownloadManager from "node-download-manager";
 
-```ts
-import DownloadManager from "node-downloader-manager";
+const url =
+  "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64";
+const createFileName = () => "code.deb";
+
+const downloadManager = new DownloadManager({
+  stream: true,
+  overWriteFile: true,
+  getFileName: createFileName,
+});
+
+downloadManager.on("start", (data) => {
+  console.log(`Download started: ${data?.url}`);
+});
+
+downloadManager.download(url);
+```
+
+#### Simple Download
+
+```typescript
+import DownloadManager from "node-download-manager";
 
 const urls = [
-  "https://example.com/file1.jpeg",
-  "https://example.com/file2.jpeg",
+  "https://i.imgur.com/StLyH09.jpeg",
+  "https://i.imgur.com/vFopwVJ.png",
 ];
 
 const downloadManager = new DownloadManager({
   consoleLog: true,
-  method: "simple", // Use simple sequential download
+  overWriteFile: true,
+  method: "simple",
 });
 
-await downloadManager.download(urls);
+downloadManager.download(urls);
 ```
 
-### Custom File Name Logic Example
+#### Pause, Resume, and Cancel Download
 
-You can define a custom logic for naming downloaded files.
+```typescript
+import DownloadManager from "node-download-manager";
 
-```ts
-import DownloadManager from "node-downloader-manager";
-
-const urls = [
-  "https://example.com/file1.jpeg",
-  "https://example.com/file2.jpeg",
-];
-
-const getFileName = (url: string) => {
-  return `custom-${Date.now()}-${url.split("/").pop()}`;
-};
+const url =
+  "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64";
+const createFileName = () => "code.deb";
 
 const downloadManager = new DownloadManager({
-  consoleLog: true,
-  getFileName, // Use custom file name logic
+  stream: true,
+  overWriteFile: true,
+  getFileName: createFileName,
 });
 
-await downloadManager.download(urls);
+downloadManager.on("start", (data) => {
+  console.log(`Download started: ${data?.url}`);
+});
+
+setTimeout(() => {
+  downloadManager.pauseDownload();
+}, 5000);
+
+setTimeout(() => {
+  downloadManager.resumeDownload();
+}, 8000);
+
+setTimeout(() => {
+  downloadManager.cancelDownload();
+}, 10000);
+
+downloadManager.download(url);
 ```
 
----
+## 📖 API Reference
 
-## 🛠️ API Documentation
+### DownloadManager Options
 
-### DownloadManager Class
+- `method`: `"simple"` | `"queue"` - The download method to use.
+- `concurrencyLimit`: `number` - Maximum number of concurrent downloads.
+- `retries`: `number` - Maximum number of retries for failed downloads.
+- `consoleLog`: `boolean` - Enable or disable console logging.
+- `downloadFolder`: `string` - Folder to save downloaded files.
+- `getFileName`: `(url: string) => string` - Function to generate file names.
+- `onBeforeDownload`: `(url: string, fileName: string) => Promise<void>` - Hook before download starts.
+- `onAfterDownload`: `(url: string, fileName: string) => Promise<void>` - Hook after download completes.
+- `overWriteFile`: `boolean` - Overwrite existing files.
+- `requestOptions`: `RequestInit` - Options for the fetch request.
+- `stream`: `boolean` - Enable streaming downloads.
+- `backOff`: `boolean` - Enable exponential backoff for retries.
+- `timeout`: `number` - Timeout for download requests.
 
-The `DownloadManager` class provides the primary interface for managing downloads.
+### Methods
 
-#### Constructor Options
+- `download(urls: string | string[])`: Start downloading the specified URLs.
+- `pauseDownload(url?: string)`: Pause the download for a specific URL or the current download.
+- `resumeDownload(url?: string)`: Resume the download for a specific URL or the current download.
+- `cancelDownload(url?: string)`: Cancel the download for a specific URL or the current download.
+- `pauseAll()`: Pause all active downloads.
+- `resumeAll()`: Resume all paused downloads.
+- `cancelAll()`: Cancel all active downloads.
 
-| Option              | Type                               | Default         | Description                                                          |
-| ------------------- | ---------------------------------- | --------------- | -------------------------------------------------------------------- |
-| `method`            | `"simple"` \| `"queue"`            | `"queue"`       | Choose between simple sequential downloads or queue-based downloads. |
-| `concurrencyLimit`  | `number`                           | `5`             | Maximum number of concurrent downloads (for queue method).           |
-| `retries`           | `number`                           | `3`             | Maximum number of retries for failed downloads.                      |
-| `consoleLog`        | `boolean`                          | `false`         | Enable or disable console logging.                                   |
-| `downloadFolder`    | `string`                           | `"./downloads"` | Folder to save the downloaded files.                                 |
-| `getFileName`       | `(url: string) => string`          | `undefined`     | Custom function to generate file names.                              |
-| `overWriteFile`     | `boolean`                          | `false`         | Overwrite files if they already exist.                               |
-| `otherTaskFunction` | `(url, fileName) => Promise<void>` | `undefined`     | Run additional tasks after each file is downloaded.                  |
+### Events
 
-#### Methods
+- `start`: Emitted when a download starts.
+- `progress`: Emitted periodically with download progress.
+- `complete`: Emitted when a download completes.
+- `error`: Emitted when a download fails.
+- `cancel`: Emitted when a download is canceled.
+- `paused`: Emitted when a download is paused.
+- `resumed`: Emitted when a download is resumed.
+- `exists`: Emitted if the file already exists.
+- `finished`: Emitted when all downloads are finished.
 
-- **`download(urls: string | string[])`**: Downloads one or more files based on the configured `method`.
-- **`enqueueDownloadTask(url: string, fileName?: string, priority?: number)`**: Adds a download task to the queue manually.
+## 🤔 Why Use DownloadManager?
 
-### Queue Class
+`node-download-manager` is designed to simplify the process of downloading files in Node.js applications. It provides a robust and flexible API for handling downloads, with support for advanced features like streaming, concurrency control, and event-driven progress reporting. Whether you're building a CLI tool, a server-side application, or a desktop app, `DownloadManager` can help you manage downloads efficiently and effectively.
 
-Manages tasks in the queue with concurrency control.
+## 🤝 Contributing
 
-#### Constructor Options
-
-| Option             | Type      | Default | Description                          |
-| ------------------ | --------- | ------- | ------------------------------------ |
-| `concurrencyLimit` | `number`  | `5`     | Maximum number of concurrent tasks.  |
-| `maxRetries`       | `number`  | `3`     | Maximum retries for failed tasks.    |
-| `consoleLog`       | `boolean` | `false` | Enable logging for queue operations. |
-
-#### Methods
-
-- **`enqueue(task: Task)`**: Adds a new task to the queue.
-- **`runNext()`**: Processes the next task in the queue.
+Contributions are welcome! Please feel free to submit a pull request or open an issue.
 
 ---
 
