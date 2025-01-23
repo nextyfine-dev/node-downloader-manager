@@ -13,7 +13,7 @@
     "dist"
   ],
   "scripts": {
-    "start": "bun --watch src/example.ts"
+    "build": "bun x tsc"
   },
   "devDependencies": {
     "@types/node": "latest"

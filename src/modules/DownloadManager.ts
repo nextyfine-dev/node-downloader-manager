@@ -162,13 +162,12 @@ class DownloadManager extends EventEmitter {
     const downloadData = this.activeDownloads.get(url);
     if (downloadData) {
       downloadData.stream.close();
-      fs.promises.unlink(downloadData.stream.path as string); // Delete file
+      await fs.promises.unlink(downloadData.stream.path as string); // Delete file
       this.activeDownloads.delete(url);
       this.emit(emitEvents.cancel, {
         message: emitMessages.cancel,
         url,
       });
-
       this.logger(`Download canceled and file deleted for URL: ${url}`);
     }
   }
@@ -343,7 +342,6 @@ class DownloadManager extends EventEmitter {
           redirect: "follow",
           signal: controller.signal,
         });
-        clearTimeout(timeout);
         if (res.status !== 200 && res.status !== 206 && res.status !== 304) {
           this.logger(
             `Could not download the file from ${url}, status ${res.status}`,
@@ -374,7 +372,6 @@ class DownloadManager extends EventEmitter {
           );
         }
       } else {
-        clearTimeout(timeout);
         this.logger(
           `${fileName} already exists inside ${this.downloadFolder} folder`
         );
@@ -391,7 +388,6 @@ class DownloadManager extends EventEmitter {
       }
       return true;
     } catch (error) {
-      clearTimeout(timeout);
       this.emit(emitEvents.error, {
         message: emitMessages.error,
         url,
@@ -403,6 +399,9 @@ class DownloadManager extends EventEmitter {
         "error"
       );
       throw error;
+    } finally {
+      // Ensure timeout is cleared in the finally block
+      clearTimeout(timeout);
     }
   }
 

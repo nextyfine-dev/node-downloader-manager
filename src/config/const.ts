@@ -17,7 +17,7 @@ export const emitMessages = {
   start: "Download started",
   finished: "Download complete",
   error: "Download failed",
-  cancel: "Download canceled",
+  cancel: "Download canceled and file removed",
   cancelAll: "All downloads canceled",
   paused: "Download paused",
   pausedAll: "All downloads paused",
