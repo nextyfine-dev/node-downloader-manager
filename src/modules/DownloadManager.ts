@@ -361,7 +361,7 @@ class DownloadManager extends EventEmitter {
           });
           throw new Error(errMSg);
         }
-        await fs.promises.mkdir(this.downloadFolder, { recursive: true });
+        await fs.promises.mkdir(path.dirname(file), { recursive: true });
 
         if (!this.stream) {
           await fs.promises.writeFile(file, res.body!, { flag: "w" });

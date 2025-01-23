@@ -21,7 +21,7 @@
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "node-downloader-manager is a simple yet powerful package manager-like download manager built with NodeJs. It allows you to download files sequentially or with a queue-based approach, handling retries and concurrency limits efficiently.",
   "main": "dist/index.js",
   "repository": {

@@ -1,6 +1,6 @@
 import { parentPort, workerData } from "node:worker_threads";
 import { WorkerTask } from "../types";
-import DownloadManager from "../index.js";
+import { DownloadManager } from "../index.js";
 
 (async () => {
   const { id, url, fileName, options }: WorkerTask = workerData;
