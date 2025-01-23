@@ -6,15 +6,18 @@ class Queue {
   private readonly concurrencyLimit: number; // The maximum number of concurrent tasks that can run at the same time.
   private readonly maxRetries: number; // The maximum number of retries allowed for failed tasks.
   private readonly log?: boolean;
+  private readonly backOff: boolean; // Enable or disable backoff logic.
 
   constructor(
     concurrencyLimit: number,
     maxRetries: number,
-    consoleLog?: boolean
+    consoleLog?: boolean,
+    backOff = false
   ) {
     this.concurrencyLimit = concurrencyLimit; // Set the concurrency limit for active tasks
     this.maxRetries = maxRetries; // Set the maximum retries allowed for failed tasks
     this.log = consoleLog;
+    this.backOff = backOff;
   }
 
   private logger(
@@ -27,6 +30,13 @@ class Queue {
         message
       );
     }
+  }
+
+  // Backoff calculation: exponential delay
+  private calculateBackoff(attempt: number): number {
+    const baseDelay = 1000; // 1 second
+    const maxDelay = 30000; // 30 seconds max
+    return Math.min(baseDelay * 2 ** attempt, maxDelay);
   }
 
   // Helper function to ensure the heap property is maintained when inserting a task (heapify up).
@@ -128,6 +138,15 @@ class Queue {
       this.logger(`Task ${task.id} failed: ${err}`, "error");
       if (task.retries < this.maxRetries) {
         this.logger(`Retrying task ${task.id}...`);
+
+        if (this.backOff) {
+          const backoffDelay = this.calculateBackoff(task.retries);
+          this.logger(
+            `Task ${task.id} - Retrying in ${backoffDelay / 1000} seconds...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+        }
+
         // If the task can be retried, increment the retry count and add it back to the queue
         this.enqueue({ ...task, retries: task.retries + 1 });
       } else {
