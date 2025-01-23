@@ -2,7 +2,7 @@
 
 # 📥 DownloadManager
 
-`node-downloader-manager` is a lightweight and efficient file download manager for Node.js applications. It allows you to download files either sequentially or using a queue-based approach, providing features like retry mechanisms, concurrency control, and custom file naming.
+`node-downloader-manager` is a lightweight and efficient file download manager for Node.js applications. It allows you to download files either sequentially or using a queue-based approach, providing features like retry mechanisms, concurrency control, stream, and custom file naming.
 
 ## 📚 Table of Contents
 
@@ -17,6 +17,7 @@
     - [bun](#bun)
   - [🚀 Usage](#-usage)
     - [Examples](#examples)
+      - [More Examples](#more-examples)
       - [Queue Download](#queue-download)
       - [Stream Download](#stream-download)
       - [Simple Download](#simple-download)
@@ -71,6 +72,12 @@ bun add node-download-manager
 Here's how you can use `node-download-manager` in your project:
 
 ### Examples
+
+#### More Examples
+
+```
+https://github.com/nextyfine-dev/node-downloader-manager/tree/master/src/examples
+```
 
 #### Queue Download
 
