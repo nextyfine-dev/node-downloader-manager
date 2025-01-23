@@ -21,3 +21,15 @@ export type DownloadManagerOptions = {
   backOff?: boolean;
   timeout?: number;
 };
+
+export type EmitDataType = {
+  message: string;
+  url?: string;
+  fileName?: string;
+  file?: string;
+  error?: unknown;
+  progress?: string;
+  totalSize?: number;
+  downloaded?: number;
+  speed?: string;
+};

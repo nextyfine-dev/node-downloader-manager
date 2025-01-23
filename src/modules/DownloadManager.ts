@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { EventEmitter } from "node:events";
-import type { DownloadManagerOptions } from "../types";
+import type { DownloadManagerOptions, EmitDataType } from "../types";
 import Queue from "./Queue.js";
+import { emitEvents, EmitEventType, emitMessages } from "../config/const";
 
 class DownloadManager extends EventEmitter {
   private readonly downloadQueue!: Queue; // Queue to handle multiple downloads
@@ -87,6 +88,16 @@ class DownloadManager extends EventEmitter {
     }
   }
 
+  // Override the 'on' method to ensure it returns 'this' (for compatibility with EventEmitter)
+  on(event: EmitEventType, callback: (data?: EmitDataType) => void): this {
+    return super.on(event, callback); // Call EventEmitter's `on` method
+  }
+
+  // Trigger an event and invoke all the registered listeners
+  emit(event: EmitEventType, data?: EmitDataType): boolean {
+    return super.emit(event, data); // Call EventEmitter's `emit` method
+  }
+
   // Pause download
   pauseDownload(
     url: string = this.currentDownloadableUrl.get(this.currentUrl)!
@@ -94,8 +105,13 @@ class DownloadManager extends EventEmitter {
     const downloadData = this.activeDownloads.get(url);
     if (downloadData && !downloadData.paused) {
       downloadData.paused = true;
-      downloadData.stream.close(); // Close the write stream to stop downloading
-      this.emit("paused", { url });
+      downloadData.stream.close();
+
+      this.emit(emitEvents.paused, {
+        url,
+        message: emitMessages.paused,
+      });
+
       this.logger(`Download for ${url} paused.`);
     } else {
       this.logger(`No active download found for URL: ${url}`, "warn");
@@ -108,7 +124,8 @@ class DownloadManager extends EventEmitter {
   ) {
     const downloadData = this.activeDownloads.get(url);
     if (downloadData?.paused) {
-      this.emit("resume", { url });
+      this.emit(emitEvents.resumed, { url, message: emitMessages.resumed });
+
       this.logger(`Resuming download for ${url}`);
       downloadData.paused = false; // Mark as not paused
       if (this.method === "queue") {
@@ -131,10 +148,12 @@ class DownloadManager extends EventEmitter {
 
   pauseAll() {
     this.activeDownloads.forEach((_, url) => this.pauseDownload(url));
+    this.emit(emitEvents.pausedAll, { message: emitMessages.pausedAll });
   }
 
   resumeAll() {
     this.activeDownloads.forEach((_, url) => this.resumeDownload(url));
+    this.emit(emitEvents.resumedAll, { message: emitMessages.resumedAll });
   }
 
   async cancelDownload(
@@ -145,7 +164,11 @@ class DownloadManager extends EventEmitter {
       downloadData.stream.close();
       fs.promises.unlink(downloadData.stream.path as string); // Delete file
       this.activeDownloads.delete(url);
-      this.emit("cancel", { url });
+      this.emit(emitEvents.cancel, {
+        message: emitMessages.cancel,
+        url,
+      });
+
       this.logger(`Download canceled and file deleted for URL: ${url}`);
     }
   }
@@ -168,7 +191,9 @@ class DownloadManager extends EventEmitter {
     });
 
     this.logger("All cancel operations processed.");
-    this.emit("cancelAll");
+    this.emit(emitEvents.cancel, {
+      message: emitMessages.cancelAll,
+    });
   }
 
   private normalizeHeaders(headers?: HeadersInit): Record<string, string> {
@@ -208,13 +233,15 @@ class DownloadManager extends EventEmitter {
       paused: false,
     });
 
-    this.emit("progress", {
+    this.emit(emitEvents.progress, {
       fileName,
       progress: ((downloadedBytes / totalSize) * 100).toFixed(2),
       downloaded: downloadedBytes,
       totalSize,
+      message: emitMessages.progress,
     });
 
+    const startTime = Date.now();
     for await (const chunk of res.body!) {
       try {
         const downloadData = this.activeDownloads.get(url);
@@ -228,23 +255,27 @@ class DownloadManager extends EventEmitter {
         const progress = ((downloadData.downloaded / totalSize) * 100).toFixed(
           2
         );
-
-        const startTime = Date.now();
         const speed = (
           downloadData.downloaded /
           ((Date.now() - startTime) / 1000)
         ).toFixed(2);
 
-        this.emit("progress", {
+        this.emit(emitEvents.progress, {
           fileName,
           progress,
           downloaded: downloadData.downloaded,
           totalSize,
           speed,
+          message: emitMessages.progress,
         });
       } catch (error) {
         writeStream.close();
-        this.emit("error", { url, file, error });
+        this.emit(emitEvents.error, {
+          url,
+          file,
+          error,
+          message: emitMessages.error,
+        });
         this.logger(`Error during stream download: ${error}`, "error");
         break;
       }
@@ -255,7 +286,18 @@ class DownloadManager extends EventEmitter {
     const downloadData = this.activeDownloads.get(url);
     if (downloadData && !downloadData.paused) {
       this.activeDownloads.delete(url); // Remove completed download
-      this.emit("complete", { fileName, url });
+      this.emit(emitEvents.complete, {
+        fileName,
+        url,
+        message: emitMessages.finished,
+      });
+
+      this.emit(emitEvents.finished, {
+        fileName,
+        url,
+        message: emitMessages.finished,
+      });
+
       this.logger(
         `Download completed for ${url}. File saved to ${this.downloadFolder}`
       );
@@ -268,6 +310,11 @@ class DownloadManager extends EventEmitter {
     fileName: string,
     downloadedBytes = 0
   ) {
+    this.emit(emitEvents.start, {
+      message: emitMessages.start,
+      url,
+      fileName,
+    });
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeout);
     try {
@@ -331,6 +378,11 @@ class DownloadManager extends EventEmitter {
         this.logger(
           `${fileName} already exists inside ${this.downloadFolder} folder`
         );
+        this.emit(emitEvents.exists, {
+          message: emitMessages.exists,
+          url,
+          fileName,
+        });
       }
 
       if (this.onAfterDownload) {
@@ -340,6 +392,12 @@ class DownloadManager extends EventEmitter {
       return true;
     } catch (error) {
       clearTimeout(timeout);
+      this.emit(emitEvents.error, {
+        message: emitMessages.error,
+        url,
+        fileName,
+        error,
+      });
       this.logger(
         `Error downloading ${fileName} from ${url}. Error:- ${error}`,
         "error"
