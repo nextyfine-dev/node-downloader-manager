@@ -42,35 +42,35 @@
 
 ## 📦 Installation
 
-You can install `node-download-manager` using your favorite package manager:
+You can install `node-downloader-manager` using your favorite package manager:
 
 ### npm
 
 ```bash
-npm install node-download-manager
+npm install node-downloader-manager
 ```
 
 ### yarn
 
 ```bash
-yarn add node-download-manager
+yarn add node-downloader-manager
 ```
 
 ### pnpm
 
 ```bash
-pnpm add node-download-manager
+pnpm add node-downloader-manager
 ```
 
 ### bun
 
 ```bash
-bun add node-download-manager
+bun add node-downloader-manager
 ```
 
 ## 🚀 Usage
 
-Here's how you can use `node-download-manager` in your project:
+Here's how you can use `node-downloader-manager` in your project:
 
 ### Examples
 
@@ -83,8 +83,8 @@ https://github.com/nextyfine-dev/node-downloader-manager/tree/master/src/example
 #### Queue Download
 
 ```typescript
-import { DownloadManager } from "node-download-manager";
-// const { DownloadManager } = require("node-download-manager"); for cjs
+import { DownloadManager } from "node-downloader-manager";
+// const { DownloadManager } = require("node-downloader-manager"); for cjs
 
 const urls = [
   "https://i.imgur.com/StLyH09.jpeg",
@@ -107,7 +107,7 @@ downloadManager.download(urls);
 #### Stream Download
 
 ```typescript
-import { DownloadManager } from "node-download-manager";
+import { DownloadManager } from "node-downloader-manager";
 
 const url =
   "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64";
@@ -129,7 +129,7 @@ downloadManager.download(url);
 #### Simple Download
 
 ```typescript
-import { DownloadManager } from "node-download-manager";
+import { DownloadManager } from "node-downloader-manager";
 
 const urls = [
   "https://i.imgur.com/StLyH09.jpeg",
@@ -148,7 +148,7 @@ downloadManager.download(urls);
 #### Pause, Resume, and Cancel Download
 
 ```typescript
-import { DownloadManager } from "node-download-manager";
+import { DownloadManager } from "node-downloader-manager";
 
 const url =
   "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64";
@@ -182,7 +182,7 @@ downloadManager.download(url);
 #### Thread Download (Beta)
 
 ```typescript
-import { DownloadManager } from "node-download-manager";
+import { DownloadManager } from "node-downloader-manager";
 
 const urls = [
   "https://i.imgur.com/StLyH09.jpeg",
@@ -243,7 +243,7 @@ downloadManager.download(urls);
 
 ## 🤔 Why Use DownloadManager?
 
-`node-download-manager` is designed to simplify the process of downloading files in Node.js applications. It provides a robust and flexible API for handling downloads, with support for advanced features like streaming, concurrency control, and event-driven progress reporting. Whether you're building a CLI tool, a server-side application, or a desktop app, `DownloadManager` can help you manage downloads efficiently and effectively.
+`node-downloader-manager` is designed to simplify the process of downloading files in Node.js applications. It provides a robust and flexible API for handling downloads, with support for advanced features like streaming, concurrency control, and event-driven progress reporting. Whether you're building a CLI tool, a server-side application, or a desktop app, `DownloadManager` can help you manage downloads efficiently and effectively.
 
 ## 🤝 Contributing
 
